@@ -1,9 +1,9 @@
-const PENDINGTYPE = 'pending';// 等待
-const FULFILLEDTYPE = 'fulfilled';//成功
-const REJECTEDTYPE = 'rejected';//失败
-class fakePromise {
+const PENDING = 'pending';// 等待
+const FULFILLED = 'fulfilled';//成功
+const REJECTED = 'rejected';//失败
+class shadowPromise {
   // 初始化一下状态
-  status: string = PENDINGTYPE;
+  status: string = PENDING;
   //success 的价值
   value: any = undefined;
   reason: any = undefined;
@@ -22,8 +22,8 @@ class fakePromise {
   }
   resolve = value => {
     // 将状态更改为成功
-    if (this.status !== PENDINGTYPE) return;
-    this.status = FULFILLEDTYPE;
+    if (this.status !== PENDING) return;
+    this.status = FULFILLED;
     // 保存值
     this.value = value;
     // 是否存在成功回调
@@ -32,8 +32,8 @@ class fakePromise {
   }
   reject = reason => {
     // 将状态更改为失败
-    if (this.status !== PENDINGTYPE) return;
-    this.status = REJECTEDTYPE;
+    if (this.status !== PENDING) return;
+    this.status = REJECTED;
     // 保存失败原因
     this.reason = reason;
      // 是否存在失败回调
@@ -49,8 +49,8 @@ class fakePromise {
     successCallback = successCallback ? successCallback : value => value;
     failCallback = failCallback ? failCallback : reason => { throw reason };
     // @2
-    let tempPromise = new fakePromise((resolve, reject)=> {
-      if (this.status === FULFILLEDTYPE) {
+    let tempPromise = new shadowPromise((resolve, reject)=> {
+      if (this.status === FULFILLED) {
         // 变成异步代码，为了获得 tempPromise
         setTimeout(()=>{
           // 将错误抛出给下一个then
@@ -66,7 +66,7 @@ class fakePromise {
             reject(e);
           }
         },0);
-      } else if(this.status === REJECTEDTYPE) {
+      } else if(this.status === REJECTED) {
         setTimeout(()=>{
           // 将错误抛出给下一个then
           try {
@@ -121,7 +121,7 @@ class fakePromise {
     if (tempPromise === res) {
       return reject(new TypeError('Chaining cycle detected for promise #<Promise>'));
     }
-    if(res instanceof fakePromise) {
+    if(res instanceof shadowPromise) {
       // promise 对象
       res.then(resolve,reject)// 直接把 传进来的resolve和reject 执行并返回值 因为then中可以调用成功与失败回调，所以可以简化写成这样
     } else {
@@ -138,7 +138,7 @@ class fakePromise {
     let result = [];
     let index = 0;
     // 一个失败整个失败
-    return new fakePromise((resolve, reject)=>{
+    return new shadowPromise((resolve, reject)=>{
       function addData(key,value) {
         result[key] = value;
         index++;
@@ -149,7 +149,7 @@ class fakePromise {
       for (let i = 0; i< array.length; i++) {
         let current = array[i];
         //把所有的promise都执行一遍
-        if (current instanceof fakePromise) {
+        if (current instanceof shadowPromise) {
           current.then(value=>{
             addData(i,value)
           },(reason)=>{
@@ -162,20 +162,20 @@ class fakePromise {
     })
   }
   static resolve (value) {
-    if (value instanceof fakePromise) return value;
-    return new fakePromise(resolve=> resolve(value));
+    if (value instanceof shadowPromise) return value;
+    return new shadowPromise(resolve=> resolve(value));
   }
   finally (callback) {
     // 获取这个执行后的值
     return this.then(value => {
       //获取执行的值， 然后 传递
-      // return fakePromise.resolve(callback());
+      // return shadowPromise.resolve(callback());
       // 注意点1 finally 什么值都不会来 2 return的promise 和   值 都不会进入下一个then，只会拿到初始的 结果
-      return fakePromise.resolve(callback()).then((value)=>value,rea=> {throw rea});
+      return shadowPromise.resolve(callback()).then((value)=>value,rea=> {throw rea});
     }, resaon => {
-      // return fakePromise.resolve(callback());
-      return fakePromise.resolve(callback()).then(()=>{throw resaon},rea=> {throw rea});
+      // return shadowPromise.resolve(callback());
+      return shadowPromise.resolve(callback()).then(()=>{throw resaon},rea=> {throw rea});
     });
   }
 }
-module.exports = fakePromise;
+module.exports = shadowPromise;
