@@ -12,6 +12,7 @@
   "dependencies": {
     "@types/node": "^14.14.9",
     "folktale": "^2.3.2",
+    "global": "^4.4.0",
     "html-webpack-plugin": "^4.5.1",
     "ldash": "0.0.1-security",
     "lodash": "^4.17.20",
@@ -19,6 +20,7 @@
     "webpack-dev-server": "^3.11.1"
   },
   "devDependencies": {
+    "flow-bin": "^0.145.0",
     "webpack-cli": "^3.0.0"
   }
 }
