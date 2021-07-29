@@ -1,19 +1,19 @@
-// curry again
-// const getSum = (a,b,c) => {
-//   return a+b+c;
-// }
+/**
+ * 
+ * @param arr 
+ * @param d 
+ * @param i 
+ * @param number 
+ * @param originI 
+ * 给你一个整数数组 arr 和一个整数 d 。每一步你可以从下标 i 跳到：
+    i + x ，其中 i + x < arr.length 且 0 < x <= d 。
+    i - x ，其中 i - x >= 0 且 0 < x <= d 。
+    除此以外，你从下标 i 跳到下标 j 需要满足：arr[i] > arr[j] 且 arr[i] > arr[k] ，其中下标 k 是所有 i 到 j 之间的数字（更正式的，min(i, j) < k < max(i, j)）。
 
-// const curry = (fuc) => {
-//   return function insideCurry(...args) {
-//     if(fuc.length>args.length) {
-//       return function () {
-//         return insideCurry(...args,...Array.from(arguments));
-//       }
-//     } else {
-//       return fuc(...args);
-//     }
-//   }
-// }
+    你可以选择数组的任意下标开始跳跃。请你返回你 最多 可以访问多少个下标。
+
+    请注意，任何时刻你都不能跳到数组的外面。
+ */
 
 // const t = curry(getSum);
 // console.log(t(1));
@@ -115,6 +115,7 @@ var maxJumps = function (arr, d) {
 };
 // 遍历最大值
 // 解决了变量缓存问题
+// lzydev 看这个
 const maxJumpsV2 = (arr, d) => {
   // 初始化缓存
   const cache = new Uint16Array(arr.length);
@@ -127,6 +128,8 @@ const maxJumpsV2 = (arr, d) => {
       let max = 0;// 这个点的最大步数
       // 初始化的当前下标 往后走一步 cur + 1， 最大可以走d步，不能超出数组，往后走 比当前低
       for (let i = cur + 1; i <= cur + d && i < arr.length && arr[i] < arr[cur]; ++i) {
+        // 循环涵盖了所有往后走的可能性
+        // 走了一步后，以当前的下标继续走
         max = Math.max(helper(i), max);// 拿最大的
       }
       // 前走 最大步数 不能超出数组 比 当前低
@@ -139,23 +142,34 @@ const maxJumpsV2 = (arr, d) => {
   }
 };
 
-// 目前知道的最优秀解决方案 今天就把这个看明白吧
+// 目前知道的最优秀解决方案 今天就把这个看明白吧 动态规划
+// 太乱了
 const maxJumps3= (arr, d) => {
-  // 末尾给了一个最大值
+  // 末尾给了一个最大值，有点偷鸡呀
   arr.push(10 ** 5 + 1);
-  const LEN = arr.length;// LEN长度
-  const dp = new Uint16Array(LEN).fill(1);// 一个新的缓存数组
+  const LEN = arr.length;// 这个数组的长度 LEN长度
+  const dp = new Uint16Array(LEN).fill(1);// 一个新的缓存数组 fill（1）是因为它就算原地不动他也访问了一次下标
+  let prevNoneSame;
+  // 然后就开始动态规划了
   for (let i = 1, top = 0, stack = new Uint16Array(LEN); i < LEN; ++i) {
+    // 第一次循环 如果第二个比第一个高，不跳了
     while (top >= 0 && arr[stack[top]] < arr[i]) {
-      let prevNoneSame = top;
+      prevNoneSame = top;
       const height = arr[stack[top]];
       while (arr[stack[prevNoneSame]] === height) --prevNoneSame;
       while (arr[stack[top]] === height) {
         const idx = stack[top--];
-        i - idx <= d && dp[idx] + 1 > dp[i] && (dp[i] = dp[idx] + 1);
-        prevNoneSame >= 0 && idx - stack[prevNoneSame] <= d && dp[idx] + 1 > dp[stack[prevNoneSame]] && (dp[stack[prevNoneSame]] = dp[idx] + 1);
+        if(i - idx <= d && dp[idx] + 1 > dp[i]) {
+          dp[i] = dp[idx] + 1
+        }
+        // i - idx <= d && dp[idx] + 1 > dp[i] && (dp[i] = dp[idx] + 1);
+        if(prevNoneSame >= 0 && idx - stack[prevNoneSame] <= d && dp[idx] + 1 > dp[stack[prevNoneSame]]) {
+          dp[stack[prevNoneSame]] = dp[idx] + 1
+        }
+        // prevNoneSame >= 0 && idx - stack[prevNoneSame] <= d && dp[idx] + 1 > dp[stack[prevNoneSame]] && (dp[stack[prevNoneSame]] = dp[idx] + 1);
       }
     }
+
     stack[++top] = i;
   }
   dp[LEN - 1] = 0;
