@@ -46,23 +46,63 @@ let tree = new Node(grid[0]);
 //     return sum;
 // };
 // 优化一下。不用缓存看下
-var deepestLeavesSum = function(root) {
-    let total = 0;
-    let maxDeep = -1;
-    function getDeep(node,index=0) {
-        if(!node) return;
-        if(index > maxDeep) {
-            maxDeep = index;
-            total = node.val;
-        } else if(maxDeep === index) {
-            total += node.val;
-        }
-        index++;
-        getDeep(node.left,index);
-        getDeep(node.right,index);
+// var deepestLeavesSum = function(root) {
+//     let total = 0;
+//     let maxDeep = -1;
+//     function getDeep(node,index=0) {
+//         if(!node) return;
+//         if(index > maxDeep) {
+//             maxDeep = index;
+//             total = node.val;
+//         } else if(maxDeep === index) {
+//             total += node.val;
+//         }
+//         index++;
+//         getDeep(node.left,index);
+//         getDeep(node.right,index);
+//     }
+//     getDeep(root);
+//     return total;
+// };
+
+
+// var deepestLeavesSum = function(root) {
+//   let total = 0;
+//   let maxDeep = -1;
+//   const getTotal = (node,index=0) =>{
+//     if(!node) return;
+//     if(maxDeep<index) {
+//       maxDeep = index;
+//       total = node.val;
+//     } else if(maxDeep === index) {
+//       total += node.val;
+//     }
+//     index++;
+//     getTotal(node.left,index);
+//     getTotal(node.right,index);
+//   }
+//   getTotal(root);
+//   return total;
+// }
+
+
+// BFS 广度优先算法
+// 思路；将树的每一层都放到数组中，给定一个初始的层级-1，循环将比当前层级更高的节点相加，直到数组中没有元素
+// 广度和深度的区别
+function deepestLeavesSum(root) {
+  let q = [{node:root,dep:0}];
+  let maxDeep = -1, total = 0;
+  while (q.length > 0){
+    let {node,dep} = q.pop();
+    if (dep > maxDeep) {
+      maxDeep = dep, total = node.val;
+    }else if(dep === maxDeep) {
+      total += node.val
     }
-    getDeep(root);
-    return total;
-};
+    if (node.left) q.push({node: node.left, dep: dep + 1})
+    if (node.right) q.push({node: node.right, dep: dep + 1})
+  }
+  return total
+}
 let a= createTree([1,2,3,4,5,null,6,7,null,null,null,null,8])
-console.log(a)
+console.log(deepestLeavesSum(a))
